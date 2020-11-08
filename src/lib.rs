@@ -1,7 +1,10 @@
-type Instruction = u16;
+use std::fs::File;
+use std::io::Read;
 
 mod display;
 use crate::display::Display;
+
+type Instruction = u16;
 
 // Some byte/nibble manipulation helpers to avoid code duplication
 fn get_byte_from_u16(input: u16, index: isize) -> Result<u8, &'static str> {
@@ -30,7 +33,7 @@ pub struct Chip8Cpu {
 }
 
 impl Chip8Cpu {
-    pub fn new() -> Chip8Cpu {
+    pub fn new(file: File) -> Result<Chip8Cpu, std::io::Error> {
         let mut chip8_cpu = Chip8Cpu {
             display: Display::new(),
             program_counter: 200,
@@ -40,12 +43,18 @@ impl Chip8Cpu {
             stack: Vec::new(),
         };
 
-        chip8_cpu.load_rom();
-
-        return chip8_cpu;
+        match chip8_cpu.load_rom(file) {
+            Ok(_) => Ok(chip8_cpu),
+            Err(error) => Err(error),
+        }
     }
 
-    fn load_rom(&mut self) {
+    fn load_rom(&mut self, mut file: File) -> Result<(), std::io::Error> {
+        // Starting index of rom in ram is for compatibility with older roms
+        match file.read(&mut self.ram[200..]) {
+            Ok(_) => Ok(()),
+            Err(error) => Err(error),
+        }
     }
 
     fn fetch(&self) -> Instruction {

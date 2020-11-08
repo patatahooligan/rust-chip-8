@@ -22,5 +22,16 @@ fn parse_program_options(mut args: std::env::Args)
 fn main() -> Result<(), String> {
      let options = parse_program_options(env::args())?;
 
+     let rom_file = match File::open(options.rom_path) {
+         Ok(file) => Ok(file),
+         Err(io_error) => Err(format!("{}", io_error)),
+     }?;
+
+     let mut cpu = match Chip8Cpu::new(rom_file) {
+         Ok(cpu) => Ok(cpu),
+         Err(io_error) => Err(format!("{}", io_error)),
+     }?;
+     cpu.main_loop();
+
      return Ok(());
 }
