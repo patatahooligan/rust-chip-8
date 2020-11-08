@@ -51,7 +51,7 @@ impl Chip8Cpu {
 
     fn load_rom(&mut self, mut file: File) -> Result<(), std::io::Error> {
         // Starting index of rom in ram is for compatibility with older roms
-        match file.read(&mut self.ram[200..]) {
+        match file.read(&mut self.ram[512..]) {
             Ok(_) => Ok(()),
             Err(error) => Err(error),
         }
@@ -70,7 +70,7 @@ impl Chip8Cpu {
     // This covers the contents of the function and allows us to use canonical
     // chip-8 names for the instruction parts without triggering warnings.
     #[allow(non_snake_case)]
-    fn decode(&mut self, instruction: Instruction) {
+    fn decode_and_execute(&mut self, instruction: Instruction) {
         // Split the instruction into all possible parts from the start. Note
         // that some of them are overlapping because the instructions have
         // different syntaxes. Using the standard chip-8 notations
@@ -105,7 +105,14 @@ impl Chip8Cpu {
         //       might cause over/under-flows?
         match instruction_type {
             0x0 => self.display.clear(),
-            0x1 => self.program_counter = NNN as usize,
+            0x1 => {
+                // Note that we have to be 2-bytes from the end of the array
+                // because instructions are 16-bit wide.
+                assert!((NNN as usize) < self.ram.len() - 2,
+                        "Program counter set to out of bounds: {}",
+                        NNN as usize);
+                self.program_counter = NNN as usize;
+            }
             0x6 => self.register[X] = NN,
             0x7 => self.register[X] += NN,
             0xa => self.index_register = NNN,
@@ -124,9 +131,15 @@ impl Chip8Cpu {
     pub fn main_loop(&mut self) {
         loop {
             let instruction = self.fetch();
-            self.program_counter += 2;
 
-            self.decode(instruction);
+            // Note that we have to be 2-bytes from the end of the array
+            // because instructions are 16-bit wide.
+            self.program_counter += 2;
+            assert!(
+                self.program_counter < self.ram.len() - 2,
+                "Program counter incremented to out of bounds");
+
+            self.decode_and_execute(instruction);
         }
     }
 }
