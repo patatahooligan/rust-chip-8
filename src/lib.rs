@@ -10,7 +10,7 @@ type Instruction = u16;
 fn get_byte_from_u16(input: u16, index: isize) -> Result<u8, &'static str> {
     match index {
         0 => Ok((input >> 8) as u8),
-        1 => Ok((input % 256) as u8),
+        1 => Ok((input % (1 << 8)) as u8),
         _ => Err("Index out of range"),
     }
 }
@@ -18,7 +18,7 @@ fn get_byte_from_u16(input: u16, index: isize) -> Result<u8, &'static str> {
 fn get_nibble_from_byte(input: u8, index: isize) -> Result<u8, &'static str> {
     match index {
         0 => Ok(input >> 4),
-        1 => Ok(input % 128),
+        1 => Ok(input % (1 << 4)),
         _ => Err("Index out of range"),
     }
 }
