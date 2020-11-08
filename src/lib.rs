@@ -52,8 +52,8 @@ impl Chip8Cpu {
         // Instructions are two bytes but the RAM is represented as u8, so
         // assemble it.
         let instruction: Instruction =
-            (self.ram[self.program_counter] as u16) << 8 +
-            self.ram[self.program_counter + 1];
+            ((self.ram[self.program_counter] as u16) << 8) +
+            (self.ram[self.program_counter + 1] as u16);
 
         return instruction;
     }
@@ -89,8 +89,8 @@ impl Chip8Cpu {
         let NN =
             get_byte_from_u16(instruction, 1).unwrap();
         let NNN =
-            (X as u16) << 8 +
-            NN;
+            ((X as u16) << 8) +
+            (NN as u16);
 
         // TODO: Do I need to manually implement wrapping for instructions that
         //       might cause over/under-flows?
